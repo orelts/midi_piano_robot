@@ -21,27 +21,29 @@ Adafruit_PWMServoDriver* pwm_arr;
 
 void press_note(int note, int octave, int force, int note_time_in_ms, Adafruit_PWMServoDriver* pwm_arr) {
 
-  pwm_arr[octave].setPWM(note, 0, SOLENOID_ON);
+  pwm_arr[1].setPWM(note, 0, SOLENOID_ON);
   delay(10);
-  pwm_arr[octave].setPWM(note, 0, force);
+  pwm_arr[1].setPWM(note, 0, force);
   
   delay(note_time_in_ms);
 
-  pwm_arr[octave].setPWM(note, 0, 0);
+  pwm_arr[1].setPWM(note, 0, 0);
   
 }
 
 void setup() {
   Wire.begin();
-  int nof_pca9685 = ((NUM_OF_SOLENOID + 11) / 12); // num of pca_9685 rounded up.
+  int nof_pca9685 = ((NUM_OF_SOLENOIDS + 11) / 12); // num of pca_9685 rounded up.
 
+    // Allocate memory for the array
+  Adafruit_PWMServoDriver* pwm_arr = new Adafruit_PWMServoDriver[nof_pca9685];
 
   for (int i = 0; i < nof_pca9685; i++) {
         // Calculate constructor argument based on the index
     int i2caddress = 0x40 + i;
 
     // Allocate memory for the object and call the constructor with the desired argument
-    pwm_arr[i] = new Adafruit_PWMServoDriver(i2caddress);
+    pwm_arr[i] = Adafruit_PWMServoDriver(i2caddress);
     pwm_arr[i].begin();
     pwm_arr[i].setPWMFreq(50); 
 
