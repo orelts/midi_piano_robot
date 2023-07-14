@@ -33,10 +33,15 @@ void press_note(int note, int octave, int force, int note_time_in_ms, Adafruit_P
 
 void setup() {
   Wire.begin();
-  int nof_pca9685 = NUM_OF_SOLENOIDS / 12;
-  pwm_arr = (Adafruit_PWMServoDriver*)malloc(nof_pca9685 * sizeof(Adafruit_PWMServoDriver));
+  int nof_pca9685 = ((NUM_OF_SOLENOID + 11) / 12); // num of pca_9685 rounded up.
+
 
   for (int i = 0; i < nof_pca9685; i++) {
+        // Calculate constructor argument based on the index
+    int i2caddress = 0x40 + i;
+
+    // Allocate memory for the object and call the constructor with the desired argument
+    pwm_arr[i] = new Adafruit_PWMServoDriver(i2caddress);
     pwm_arr[i].begin();
     pwm_arr[i].setPWMFreq(50); 
 
@@ -49,7 +54,7 @@ void setup() {
 
 void loop() {
   int octave = 0;
-  int force = 3600;
+  int force = 4000;
   int note_time = note_time;
 
   press_note(NOTE_G, octave, force, note_time, pwm_arr);
