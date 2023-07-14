@@ -36,7 +36,7 @@ void setup() {
   int nof_pca9685 = ((NUM_OF_SOLENOIDS + 11) / 12); // num of pca_9685 rounded up.
 
     // Allocate memory for the array
-  Adafruit_PWMServoDriver* pwm_arr = new Adafruit_PWMServoDriver[nof_pca9685];
+  pwm_arr = new Adafruit_PWMServoDriver[nof_pca9685];
 
   for (int i = 0; i < nof_pca9685; i++) {
         // Calculate constructor argument based on the index
@@ -57,7 +57,7 @@ void setup() {
 void loop() {
   int octave = 0;
   int force = 4000;
-  int note_time = note_time;
+  int note_time = 300;
 
   press_note(NOTE_G, octave, force, note_time, pwm_arr);
   press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
