@@ -1,24 +1,42 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
+#include <MIDI.h>
 
-#define NUM_OF_SOLENOIDS 35
+
+MIDI_CREATE_DEFAULT_INSTANCE();
+
 #define SOLENOID_ON 4000  // Maximum PWM value for full activation
+#define FIRST_NOTE_PITCH 21
+#define OCTAVES 7
 
-Adafruit_PWMServoDriver* pwm_arr;
+const int32_t pca_address[OCTAVES] = {0x45, 0x44, 0x46, 0x41, 0x42, 0x43, 0x40};
+const int midiChannel = 1;
+const int ledPin = 13;
 
-#define NOTE_C 0
-#define NOTE_C_MAJOR 1
-#define NOTE_D 2
-#define NOTE_D_MAJOR 3
-#define NOTE_E 4
-#define NOTE_F 5
-#define NOTE_F_MAJOR 6
-#define NOTE_G 7
-#define NOTE_G_MAJOR 8
-#define NOTE_A 9
-#define NOTE_A_MAJOR 10
-#define NOTE_B 11
+Adafruit_PWMServoDriver pwm_arr[OCTAVES];
 
+void from_pitch_to_index(byte pitch, int* pca, int* index) {
+
+  int normalized_pitch =  static_cast<int>(pitch); - FIRST_NOTE_PITCH;
+  
+  if ( ( normalized_pitch) && (normalized_pitch  <= 14) ) {
+    // first octave 
+    *pca = 0;
+    *index = normalized_pitch;
+  } 
+  else if (normalized_pitch == 87) 
+  {
+      // last note
+    *pca = 6;
+    *index = 12;
+  }
+  else
+  {
+    *pca = (normalized_pitch - 3) / 12;
+    *index = (normalized_pitch - 3) % 12;
+  }
+
+}
 void press_note(int note, int octave, int force, int note_time_in_ms, Adafruit_PWMServoDriver* pwm_arr) {
 
   pwm_arr[1].setPWM(note, 0, SOLENOID_ON);
@@ -33,89 +51,69 @@ void press_note(int note, int octave, int force, int note_time_in_ms, Adafruit_P
 
 void setup() {
   Wire.begin();
-  int nof_pca9685 = ((NUM_OF_SOLENOIDS + 11) / 12); // num of pca_9685 rounded up.
 
-    // Allocate memory for the array
-  pwm_arr = new Adafruit_PWMServoDriver[nof_pca9685];
+  // Start the MIDI interface
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+  // Serial.begin(9600);
+  // Set the callback functions for Note On and Note Off messages
+  MIDI.setHandleNoteOn(handleNoteOn);
+  MIDI.setHandleNoteOff(handleNoteOff);
 
-  for (int i = 0; i < nof_pca9685; i++) {
-        // Calculate constructor argument based on the index
-    int i2caddress = 0x40 + i;
-
+  for (int i = 0; i < OCTAVES; i++) {
     // Allocate memory for the object and call the constructor with the desired argument
-    pwm_arr[i] = Adafruit_PWMServoDriver(i2caddress);
+    pwm_arr[i] = Adafruit_PWMServoDriver(pca_address[i]);
     pwm_arr[i].begin();
     pwm_arr[i].setPWMFreq(50); 
 
     // reseting power for solenoids
     for (int j = 0; j < 12; j++) { 
-       pwm_arr[i].setPWM(j, 0, 10);
+       pwm_arr[i].setPWM(j, 0, 0);
     }
   }
+  // Set the LED pin as an output
+  pinMode(ledPin, OUTPUT);
 }
 
 void loop() {
-  int octave = 0;
-  int force = 4000;
-  int note_time = 300;
+  // Call the MIDI library update method in the loop
+  MIDI.read();
+}
 
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
+// Callback function for Note On messages
+void handleNoteOn(byte channel, byte pitch, byte velocity) {
+  int index, pca;
+  from_pitch_to_index(pitch, &pca, &index);
+  // Handle Note On message for channel 1
+  if (channel == midiChannel) {
+    pwm_arr[pca].setPWM(index, 0, SOLENOID_ON);
+    // // Turn on the LED
+    digitalWrite(ledPin, HIGH);
+    // Serial.print("Note On: Pitch = ");
+    // Serial.print(pitch);
+    // Serial.print(", Velocity = ");
+    // Serial.println(velocity);
 
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
 
-  press_note(NOTE_C, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, 2 * note_time, pwm_arr);
 
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
+  }
+}
 
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
+// Callback function for Note Off messages
+void handleNoteOff(byte channel, byte pitch, byte velocity) {
 
-  press_note(NOTE_C, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_C, octave, force, note_time, pwm_arr);
+  int index, pca;
+  from_pitch_to_index(pitch, &pca, &index);
 
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
+  // Handle Note Off message for channel 1
+  if (channel == midiChannel) {
+    pwm_arr[pca].setPWM(index, 0, 0);
 
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, 2 * note_time, pwm_arr);
-
-  press_note(NOTE_F, octave, force, note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
-  press_note(NOTE_D, octave, force, 2 * note_time, pwm_arr);
-
-  press_note(NOTE_C, octave, force, note_time, pwm_arr);
-  press_note(NOTE_E, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_G, octave, force, note_time, pwm_arr);
-  press_note(NOTE_C, octave, force, note_time, pwm_arr);
+    // Turn off the LED
+    digitalWrite(ledPin, LOW);
+    // Print a message to Serial Monitor
+    // Serial.print("Note Off: Pitch = ");
+    // Serial.print(pitch);
+    // Serial.print(", Velocity = ");
+    // Serial.println(velocity);
+  }
 }
