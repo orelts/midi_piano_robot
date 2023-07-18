@@ -15,9 +15,9 @@ const int ledPin = 13;
 
 Adafruit_PWMServoDriver pwm_arr[OCTAVES];
 
-void from_pitch_to_index(byte pitch, int* pca, int* index) {
+void from_pitch_to_index(uint8_t pitch, int* pca, int* index) {
 
-  int normalized_pitch =  static_cast<int>(pitch); - FIRST_NOTE_PITCH;
+  int normalized_pitch =  pitch - FIRST_NOTE_PITCH;
   
   if ( ( normalized_pitch) && (normalized_pitch  <= 14) ) {
     // first octave 
@@ -35,8 +35,9 @@ void from_pitch_to_index(byte pitch, int* pca, int* index) {
     *pca = (normalized_pitch - 3) / 12;
     *index = (normalized_pitch - 3) % 12;
   }
-
 }
+
+
 void press_note(int note, int octave, int force, int note_time_in_ms, Adafruit_PWMServoDriver* pwm_arr) {
 
   pwm_arr[1].setPWM(note, 0, SOLENOID_ON);
@@ -72,6 +73,7 @@ void setup() {
   }
   // Set the LED pin as an output
   pinMode(ledPin, OUTPUT);
+  Serial.begin(115200);
 }
 
 void loop() {
@@ -81,11 +83,14 @@ void loop() {
 
 // Callback function for Note On messages
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
-  int index, pca;
-  from_pitch_to_index(pitch, &pca, &index);
+  int index, octave, pca;
+  from_pitch_to_index(pitch, &octave, &index);
+
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
-    pwm_arr[pca].setPWM(index, 0, SOLENOID_ON);
+
+    pwm_arr[octave].setPWM(index, 0, SOLENOID_ON);
+   
     // // Turn on the LED
     digitalWrite(ledPin, HIGH);
     // Serial.print("Note On: Pitch = ");
@@ -100,13 +105,13 @@ void handleNoteOn(byte channel, byte pitch, byte velocity) {
 
 // Callback function for Note Off messages
 void handleNoteOff(byte channel, byte pitch, byte velocity) {
+  int index, octave, pca;
+  from_pitch_to_index(pitch, &octave, &index);
 
-  int index, pca;
-  from_pitch_to_index(pitch, &pca, &index);
-
-  // Handle Note Off message for channel 1
+  // Handle Note On message for channel 1
   if (channel == midiChannel) {
-    pwm_arr[pca].setPWM(index, 0, 0);
+
+    pwm_arr[octave].setPWM(index, 0, 0);
 
     // Turn off the LED
     digitalWrite(ledPin, LOW);
