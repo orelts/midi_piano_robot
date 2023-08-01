@@ -72,43 +72,37 @@ void loop() {
   MIDI.read();
 }
 
+void activate_note(byte pitch, byte velocity, bool on)
+{
+  int index, octave;
+  from_pitch_to_index(pitch, &octave, &index);
+  
+  if ( on ) 
+  {
+    pwm_arr[octave].setPWM(index, 0, SOLENOID_ON);
+    digitalWrite(ledPin, HIGH);
+  } 
+  else 
+  {
+    pwm_arr[octave].setPWM(index, 0, 0);
+    delay(40);
+    // Turn off the LED
+    digitalWrite(ledPin, LOW);
+  }  
+}
+
 // Callback function for Note On messages
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
-  int index, octave, pca;
-  from_pitch_to_index(pitch, &octave, &index);
-
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
-
-    pwm_arr[octave].setPWM(index, 0, SOLENOID_ON);
-    // // Turn on the LED
-    digitalWrite(ledPin, HIGH);
-    // Serial.print("Note On: Pitch = ");
-    // Serial.print(pitch);
-    // Serial.print(", Velocity = ");
-    // Serial.println(velocity);
-
-
-
+    activate_note(pitch, velocity, true);
   }
 }
 
 // Callback function for Note Off messages
 void handleNoteOff(byte channel, byte pitch, byte velocity) {
-  int index, octave, pca;
-  from_pitch_to_index(pitch, &octave, &index);
-
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
-
-    pwm_arr[octave].setPWM(index, 0, 0);
-    delay(40);
-    // Turn off the LED
-    digitalWrite(ledPin, LOW);
-    // Print a message to Serial Monitor
-    // Serial.print("Note Off: Pitch = ");
-    // Serial.print(pitch);
-    // Serial.print(", Velocity = ");
-    // Serial.println(velocity);
+    activate_note(pitch, velocity, false);
   }
 }
