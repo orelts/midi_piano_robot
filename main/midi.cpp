@@ -14,7 +14,7 @@ void handleNoteOn(byte channel, byte pitch, byte velocity) {
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
     unsigned long current_time = millis();
-    player.addNote(pitch, current_time + RECOIL, velocity);
+    player.addNote(pitch, RECOIL, velocity);
   }
 }
 
