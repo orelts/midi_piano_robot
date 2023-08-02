@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#define MID_INTERVAL_IN_MS 1
 // Callback function for Note On messages
 void handleNoteOn(byte channel, byte pitch, byte velocity);
 

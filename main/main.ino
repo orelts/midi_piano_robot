@@ -28,10 +28,15 @@ void setup() {
 
 }
 
+unsigned long lastMidiTime = 0;
+
 void loop() {
-  player.playNotes();
   // Call the MIDI library update method in the loop
   MIDI.read();
+  lastMidiTime = millis();
+  // Play notes in a non-blocking way
+  player.playNotes();
+  
 }
 
 

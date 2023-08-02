@@ -1,8 +1,11 @@
 #include "notes.h"
 #include "solenoid_ctrl.h"
 #include <Arduino.h>
+#include "midi.h"
 
 extern NoteInfo note_info_array[NUM_NOTES];
+extern unsigned long lastMidiTime;
+
 
 void NotePlayer::addNote(byte pitch, unsigned long time_to_play, byte velocity) {
     Note newNote(pitch, time_to_play, velocity);
@@ -30,7 +33,7 @@ void NotePlayer::insertSorted(Note note) {
 void NotePlayer::playNotes() {
   unsigned long current_time = millis();
 
-  while (head != nullptr && head->data.time_to_play <= current_time) {
+  while (head != nullptr && head->data.time_to_play <= current_time && (current_time - lastMidiTime) <= MID_INTERVAL_IN_MS) {
     // Remove and obtain the note from the queue
     Note nextNoteToPlay = head->data;
     // Remove the note from the queue
@@ -43,5 +46,6 @@ void NotePlayer::playNotes() {
 
     activate_note(pitch, velocity, true);       
     note_info_array[pitch-FIRST_NOTE_PITCH].last_time_on = current_time; 
+    current_time = millis();
   }
 }
