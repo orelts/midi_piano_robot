@@ -4,9 +4,8 @@
 
 extern NoteInfo note_info_array[NUM_NOTES];
 
-void NotePlayer::addNote(byte pitch, unsigned long timeOffset, byte velocity) {
-    unsigned long playTime = millis() + timeOffset;
-    Note newNote(pitch, playTime, velocity);
+void NotePlayer::addNote(byte pitch, unsigned long time_to_play, byte velocity) {
+    Note newNote(pitch, time_to_play, velocity);
     insertSorted(newNote);
 }
 

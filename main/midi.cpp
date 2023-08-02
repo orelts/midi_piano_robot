@@ -13,8 +13,8 @@ extern NoteInfo note_info_array[NUM_NOTES];
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
-    unsigned long current_time = millis();
-    player.addNote(pitch, RECOIL, velocity);
+    unsigned long time_to_play = note_info_array[pitch-FIRST_NOTE_PITCH].last_time_off + RECOIL;
+    player.addNote(pitch, time_to_play, velocity);
   }
 }
 
