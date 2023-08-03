@@ -22,8 +22,8 @@ void setup() {
 
   initialize_sol();
   for (int i = 0; i < NUM_NOTES; i++) {
-    note_info_array[i].last_time_on = -50;
-    note_info_array[i].last_time_off = -50;
+    note_info_array[i].last_time_on = 0;
+    note_info_array[i].last_time_off = 0;
   }
 
 }

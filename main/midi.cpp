@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "solenoid_ctrl.h"
 
-#define RECOIL 40
+#define RECOIL 45
 const int midiChannel = 1;
 
 extern NotePlayer player;
