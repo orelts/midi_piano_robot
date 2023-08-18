@@ -36,7 +36,6 @@ void loop() {
   lastMidiTime = millis();
   // Play notes in a non-blocking way
   player.playNotes();
-  
 }
 
 

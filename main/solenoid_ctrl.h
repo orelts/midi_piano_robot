@@ -6,7 +6,10 @@
 #define FIRST_NOTE_PITCH 21
 #define OCTAVES 7
 #define NUM_NOTES 88
-#define SOLENOID_ON 4000  // Maximum PWM value for full activation
+#define SOLENOID_MAX 4095  // Maximum PWM value for full activation
+#define SOLENOID_MIN 3500  // Maximum PWM value for min activation
+#define V_MAX 127 
+
 #define LED_PIN 13
 
 void from_pitch_to_index(uint8_t pitch, int* octave, int* index);

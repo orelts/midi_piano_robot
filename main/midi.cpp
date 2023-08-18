@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include "solenoid_ctrl.h"
 
-#define RECOIL 45
 const int midiChannel = 1;
 
 extern NotePlayer player;
@@ -13,7 +12,14 @@ extern NoteInfo note_info_array[NUM_NOTES];
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
   // Handle Note On message for channel 1
   if (channel == midiChannel) {
-    unsigned long time_to_play = note_info_array[pitch-FIRST_NOTE_PITCH].last_time_off + RECOIL;
+    int last_diff = note_info_array[pitch-FIRST_NOTE_PITCH].last_time_off - note_info_array[pitch-FIRST_NOTE_PITCH].last_time_on;
+    int recoil;
+    if (last_diff >= 130) {
+      recoil = 60;
+    } else {
+      recoil = 50;
+    }
+    unsigned long time_to_play = note_info_array[pitch-FIRST_NOTE_PITCH].last_time_off + recoil;
     player.addNote(pitch, time_to_play, velocity);
   }
 }

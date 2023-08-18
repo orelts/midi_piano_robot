@@ -34,9 +34,18 @@ void activate_note(byte pitch, byte velocity, bool on)
   int index, octave;
   from_pitch_to_index(pitch, &octave, &index);
   
+  double a, b, c, v;
+  a = (double)(SOLENOID_MIN - SOLENOID_MAX) / ((double)V_MAX * V_MAX);
+  b = -2.0  * a * (double)V_MAX;
+  c = (double)SOLENOID_MIN;
+  v = double(velocity);
+  double tmp = a * velocity * velocity + b * velocity + c;
+
+  int force = (int)tmp;
+
   if ( on ) 
   {
-    pwm_arr[octave].setPWM(index, 0, SOLENOID_ON);
+    pwm_arr[octave].setPWM(index, 0, force);
     digitalWrite(LED_PIN, HIGH);
   } 
   else 
